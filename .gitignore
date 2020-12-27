@@ -4,5 +4,10 @@
 *.json
 *.pkl
 __pycache__/
+
+# Python virtual env
 venv/
+
+# Mac OS
+.DS_Store
 
