@@ -23,7 +23,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import Select
 
-UA_STRING = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36"
+UA_STRING = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36'
 
 DEBUG = True
 DEBUG_READ = False
@@ -64,13 +64,13 @@ def parse_orders_page(src, driver=None, track=False):
                 try:
                     # if present, It means, tracking has begun
                     order['tracking_status'] = driver.find_element_by_css_selector('.ui-balloon .event-line-key').text
-                except:
+                except Exception:
                     # Check for no event which means tracking has not started or has not begun
                     try:
                         order['tracking_status'] = driver.find_element_by_css_selector('.ui-balloon .no-event').text.strip()
                         # If above passed, copy the tracking link and pass for manual tracking
-                        order['tracking_status'] = "Manual Tracking: " + driver.find_element_by_css_selector('.ui-balloon .no-event a').get_attribute('href').strip()
-                    except:
+                        order['tracking_status'] = 'Manual Tracking: ' + driver.find_element_by_css_selector('.ui-balloon .no-event a').get_attribute('href').strip()
+                    except Exception:
                         order['tracking_status'] = '<Tracking Parse Error>'
             except Exception as e:
                 order['tracking_id'] = '<Error in Parsing Tracking ID>'
@@ -89,8 +89,7 @@ def parse_orders(driver='', order_json_file='', cache_mode='webread', track=Fals
         if driver == '':
             raise Exception("No Selenium driver found in webread mode.")
         # Verify number of orders and implement pagination
-
-        source = driver.find_element_by_id("buyer-ordertable").get_attribute("innerHTML")
+        source = driver.find_element_by_id('buyer-ordertable').get_attribute('innerHTML')
     elif cache_mode == 'localwrite':
         if order_json_file == '':
             raise Exception("Filename Missing. Please pass a valid filename to order_json_file.")
@@ -129,12 +128,12 @@ def get_driver(drivertype, driver_path=''):
         from selenium.webdriver.chrome.options import Options
         opts = Options()
         opts.add_argument("user-agent=%s" % UA_STRING)
-        opts.add_argument("--headless")
-        opts.add_argument("--disable-gpu")
+        opts.add_argument('--headless')
+        opts.add_argument('--disable-gpu')
         driver = webdriver.Chrome(driver_path, options=opts)
     elif drivertype == 'PhantomJS':
         dcap = dict(DesiredCapabilities.PHANTOMJS)
-        dcap["phantomjs.page.settings.userAgent"] = (UA_STRING)
+        dcap['phantomjs.page.settings.userAgent'] = (UA_STRING)
         driver = webdriver.PhantomJS(desired_capabilities=dcap)
     elif drivertype == 'Firefox':
         from selenium.webdriver.firefox.options import Options
@@ -176,18 +175,20 @@ def get_open_orders(email, passwd, driver):
         )
         print("Cookies worked.")
 
-    except:
+    except Exception:
         # cookies did not work remove them
         try:
             os.remove('cookies.pkl')
         except OSError:
             pass
-        print('Logging in.')
-        driver.switch_to.frame(driver.find_element_by_id('alibaba-login-box'))
+
+        print('Logging in...')
+        # driver.switch_to.frame(driver.find_element_by_id('alibaba-login-box'))
         element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, 'fm-login-id'))
         )
 
+        print('send pwd')
         # login and save cookies
         element.clear()
         element.send_keys(email)
@@ -208,53 +209,50 @@ def get_open_orders(email, passwd, driver):
         screenshot_name = sys.argv[2]
         driver.save_screenshot(screenshot_name)
         print("%s saved." % screenshot_name)
-    if 'json' not in modes:
-        return {}
 
     aliexpress = {}
 
-    elemAwaitingShipment = driver.find_element_by_id('remiandTips_waitSendGoodsOrders')
-    # intAwaitingShipment = elemAwaitingShipment.get_attribute("innerText").split("(")[1].strip(")")
-    elemAwaitingShipment.click()
-    aliexpress['Not Shipped'] = parse_orders(driver, 'ae1.html', 'webread')
+    if 'json' in modes:
+        elemAwaitingShipment = driver.find_element_by_id('remiandTips_waitSendGoodsOrders')
+        # intAwaitingShipment = elemAwaitingShipment.get_attribute("innerText").split("(")[1].strip(")")
+        elemAwaitingShipment.click()
+        aliexpress['Not Shipped'] = parse_orders(driver, 'ae1.html', 'webread')
 
-    elemAwaitingDelivery = driver.find_element_by_id('remiandTips_waitBuyerAcceptGoods')
-    # intAwaitingDelivery = elemAwaitingDelivery.get_attribute("innerText").split("(")[1].strip(")")
-    elemAwaitingDelivery.click()
-    aliexpress['Shipped'] = parse_orders(driver, 'ae2.html', 'webread', track=True)
+        elemAwaitingDelivery = driver.find_element_by_id('remiandTips_waitBuyerAcceptGoods')
+        # intAwaitingDelivery = elemAwaitingDelivery.get_attribute("innerText").split("(")[1].strip(")")
+        elemAwaitingDelivery.click()
+        aliexpress['Shipped'] = parse_orders(driver, 'ae2.html', 'webread', track=True)
 
-    # elemAwaitingShipment = driver.find_element_by_id('remiandTips_waitBuyerPayment')
-    # intAwaitingShipment = elemAwaitingShipment.get_attribute('innerText').split("(")[1].strip(')')
-    elemAwaitingShipment.click()
-    aliexpress['Order Awaiting Payment'] = parse_orders(driver, 'ae3.html', 'webread')
+        # elemAwaitingShipment = driver.find_element_by_id('remiandTips_waitBuyerPayment')
+        # intAwaitingShipment = elemAwaitingShipment.get_attribute('innerText').split("(")[1].strip(')')
+        elemAwaitingShipment.click()
+        aliexpress['Order Awaiting Payment'] = parse_orders(driver, 'ae3.html', 'webread')
 
-    # Completed orders
-    driver.find_element_by_id('switch-filter').click()
-    try:
-        Select(driver.find_element_by_id('order-status')).select_by_value('FINISH')
-    except:
+        # Completed orders
         driver.find_element_by_id('switch-filter').click()
-        Select(driver.find_element_by_id('order-status')).select_by_value('FINISH')
-    driver.find_element_by_id('search-btn').click()
-    aliexpress['Order Completed'] = parse_orders(driver, 'ae4.html', 'webread')
+        try:
+            Select(driver.find_element_by_id('order-status')).select_by_value('FINISH')
+        except Exception:
+            driver.find_element_by_id('switch-filter').click()
+            Select(driver.find_element_by_id('order-status')).select_by_value('FINISH')
+        driver.find_element_by_id('search-btn').click()
+        aliexpress['Order Completed'] = parse_orders(driver, 'ae4.html', 'webread')
 
-    if DEBUG:
-        open('orders.json', 'w').write(json.dumps(aliexpress))
+        if DEBUG:
+            open('orders.json', 'w').write(json.dumps(aliexpress))
 
     return(aliexpress)
 
 
 if __name__ == '__main__':
-
     driver = get_driver('Chrome', 'chromedriver')
     try:
-        orders = get_open_orders(os.environ['AE_username'], os.environ['AE_passwd'], driver)
+        orders = get_open_orders(os.environ['AE_username'], os.environ['AE_password'], driver)
     except Exception as e:
         print("get_open_orders: %s" % e)
-        driver.save_screenshot("error_%s.png" % time.asctime)
+        driver.save_screenshot("error_%s.png" % time.asctime())
         close_driver(driver)
         sys.exit(1)
-
     close_driver(driver)
     # sheets.clear_google_sheet(sheets.URL, sheets.SHEET_NAME)
     # sheets.save_aliexpress_orders(orders)
