@@ -26,7 +26,6 @@ from selenium.webdriver.support.ui import Select
 UA_STRING = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36'
 
 DEBUG = True
-DEBUG_READ = False
 
 modes = sys.argv[1].split(',')
 
@@ -213,20 +212,24 @@ def get_open_orders(email, passwd, driver):
     aliexpress = {}
 
     if 'json' in modes:
+        cache_mode = 'webread'
+        if DEBUG:
+            cache_mode = 'localread'
+    
         elemAwaitingShipment = driver.find_element_by_id('remiandTips_waitSendGoodsOrders')
         # intAwaitingShipment = elemAwaitingShipment.get_attribute("innerText").split("(")[1].strip(")")
         elemAwaitingShipment.click()
-        aliexpress['Not Shipped'] = parse_orders(driver, 'ae1.html', 'webread')
+        aliexpress['Not Shipped'] = parse_orders(driver, 'ae1.htm', cache_mode)
 
         elemAwaitingDelivery = driver.find_element_by_id('remiandTips_waitBuyerAcceptGoods')
         # intAwaitingDelivery = elemAwaitingDelivery.get_attribute("innerText").split("(")[1].strip(")")
         elemAwaitingDelivery.click()
-        aliexpress['Shipped'] = parse_orders(driver, 'ae2.html', 'webread', track=True)
+        aliexpress['Shipped'] = parse_orders(driver, 'ae2.htm', cache_mode, track=True)
 
-        # elemAwaitingShipment = driver.find_element_by_id('remiandTips_waitBuyerPayment')
+        elemAwaitingShipment = driver.find_element_by_id('remiandTips_waitBuyerPayment')
         # intAwaitingShipment = elemAwaitingShipment.get_attribute('innerText').split("(")[1].strip(')')
         elemAwaitingShipment.click()
-        aliexpress['Order Awaiting Payment'] = parse_orders(driver, 'ae3.html', 'webread')
+        aliexpress['Order Awaiting Payment'] = parse_orders(driver, 'ae3.htm', cache_mode)
 
         # Completed orders
         driver.find_element_by_id('switch-filter').click()
@@ -236,7 +239,7 @@ def get_open_orders(email, passwd, driver):
             driver.find_element_by_id('switch-filter').click()
             Select(driver.find_element_by_id('order-status')).select_by_value('FINISH')
         driver.find_element_by_id('search-btn').click()
-        aliexpress['Order Completed'] = parse_orders(driver, 'ae4.html', 'webread')
+        aliexpress['Order Completed'] = parse_orders(driver, 'ae4.htm', 'webread')
 
         if DEBUG:
             open('orders.json', 'w').write(json.dumps(aliexpress))
