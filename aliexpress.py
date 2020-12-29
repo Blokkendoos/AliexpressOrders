@@ -36,8 +36,7 @@ class AliExpress():
 
     UA_STRING = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36'
 
-    def __init__(self, debug=False):
-        self.debug = debug
+    def __init__(self):
         self.driver = None
         self.get_driver()
 
