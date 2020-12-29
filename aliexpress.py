@@ -261,7 +261,8 @@ if __name__ == '__main__':
 
     if 'json' in modes or 'csv' in modes:
         orders = ae.get_open_orders(cache_mode)
-        open('orders.json', 'w').write(json.dumps(orders))
+        if 'json' in modes:
+            open('orders.json', 'w').write(json.dumps(orders))
 
     if DEBUG:
         with open('orders.json', 'r') as f:
