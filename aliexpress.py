@@ -13,6 +13,7 @@ The package is dependant on lxml, pyquery, selenium and Chromedriver/PhantomJS P
 """
 
 import os
+import csv
 import sys
 import json
 import time
@@ -29,7 +30,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import Select
 
 
-DEBUG = True
+DEBUG = False
 
 
 class AliExpress():
@@ -246,19 +247,39 @@ if __name__ == '__main__':
             ae.save_screenshot(screenshot_name)
             print("%s saved." % screenshot_name)
 
-        cache_mode = 'webread'
-        if DEBUG:
-            cache_mode = 'localread'
-        if 'json' in modes:
-            orders = ae.get_open_orders(cache_mode)
-            if DEBUG:
-                open('orders.json', 'w').write(json.dumps(orders))
-        ae.close()
-
     except Exception as e:
-        print("get_open_orders: %s" % e)
+        print("login: %s" % e)
         ae.save_screenshot("error_%s.png" % time.asctime())
         ae.close()
         sys.exit(1)
     # sheets.clear_google_sheet(sheets.URL, sheets.SHEET_NAME)
     # sheets.save_aliexpress_orders(orders)
+
+    cache_mode = 'webread'
+    if DEBUG:
+        cache_mode = 'localread'
+
+    if 'json' in modes or 'csv' in modes:
+        orders = ae.get_open_orders(cache_mode)
+        open('orders.json', 'w').write(json.dumps(orders))
+
+    if DEBUG:
+        with open('orders.json', 'r') as f:
+            print("load orders.json")
+            orders = json.load(f)
+            print(orders['Shipped'][0])
+
+    if 'csv' in modes:
+        print("save CSV")
+        csv_file = open('orders.csv', 'w')
+        csvwriter = csv.writer(csv_file)
+        first = True
+        for order in orders['Shipped']:
+            if first:
+                first = False
+                header = order.keys()
+                csvwriter.writerow(header)
+            csvwriter.writerow(order.values())
+        csv_file.close()
+
+    ae.close()

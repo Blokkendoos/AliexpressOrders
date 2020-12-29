@@ -3,6 +3,8 @@ Now track your own aliexpress orders easily. This python script generates a json
 It also saved the information in a google sheet if you have set up one. This will enable you to use powerful spreadsheet filters in google sheets for better order management and tracking.
 
 ### Usage
+`python aliexpress.py [json][csv][screenshot <screenshot_filename.png>]`
+
 Get only screenshot:
 `python aliexpress.py screenshot <screenshot_filename.png>`
 
