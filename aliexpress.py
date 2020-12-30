@@ -231,7 +231,7 @@ class AliExpress():
             self.driver.find_element_by_id('switch-filter').click()
             Select(self.driver.find_element_by_id('order-status')).select_by_value('FINISH')
         self.driver.find_element_by_id('search-btn').click()
-        aliexpress['Order Completed'] = self.parse_orders('ae4.htm', 'webread')
+        aliexpress['Order Completed'] = self.parse_orders('ae4.htm', cache_mode)
 
         return(aliexpress)
 
